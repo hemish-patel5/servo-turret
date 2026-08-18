@@ -1,46 +1,72 @@
 #include <Arduino.h>
 #include <ESP32Servo.h>
 
-Servo servo1;
-Servo servo2;
+Servo horizontalServo;
+Servo verticalServo;
 
-const int SERVO1_PIN = 18;
-const int SERVO2_PIN = 19;
+constexpr int HORIZONTAL_SERVO_PIN = 18;
+constexpr int VERTICAL_SERVO_PIN = 19;
+constexpr int STEP_SIZE = 10;
+
+int horizontalAngle = 90;
+int verticalAngle = 90;
+
+void moveServo(Servo &servo, int &angle, int change)
+{
+  angle = constrain(angle + change, 0, 180);
+  servo.write(angle);
+
+  Serial.print("Horizontal: ");
+  Serial.print(horizontalAngle);
+  Serial.print(" degrees, Vertical: ");
+  Serial.print(verticalAngle);
+  Serial.println(" degrees");
+}
 
 void setup()
 {
-  servo1.attach(SERVO1_PIN);
-  servo2.attach(SERVO2_PIN);
+  Serial.begin(115200);
 
-  // Start both servos at 0 degrees
-  servo1.write(0);
-  servo2.write(0);
+  horizontalServo.setPeriodHertz(50);
+  verticalServo.setPeriodHertz(50);
+  horizontalServo.attach(HORIZONTAL_SERVO_PIN, 500, 2400);
+  verticalServo.attach(VERTICAL_SERVO_PIN, 500, 2400);
 
-  delay(1000);
+  horizontalServo.write(horizontalAngle);
+  verticalServo.write(verticalAngle);
+
+  Serial.println("Arrow-key servo control ready.");
+  Serial.println("Left/Right: GPIO 18 | Up/Down: GPIO 19");
 }
 
 void loop()
 {
-
-  // Move from 0 to 180 degrees
-  for (int angle = 0; angle <= 180; angle++)
+  if (Serial.available() < 3)
   {
-    servo1.write(angle);
-    servo2.write(angle);
-
-    delay(15);
+    return;
   }
 
-  delay(500);
-
-  // Move from 180 back to 0 degrees
-  for (int angle = 180; angle >= 0; angle--)
+  // Arrow keys are sent by most terminals as: ESC [ A/B/C/D.
+  if (Serial.read() != 27 || Serial.read() != '[')
   {
-    servo1.write(angle);
-    servo2.write(angle);
-
-    delay(15);
+    return;
   }
 
-  delay(500);
+  switch (Serial.read())
+  {
+  case 'A': // Up
+    moveServo(verticalServo, verticalAngle, STEP_SIZE);
+    break;
+  case 'B': // Down
+    moveServo(verticalServo, verticalAngle, -STEP_SIZE);
+    break;
+  case 'C': // Right
+    moveServo(horizontalServo, horizontalAngle, -STEP_SIZE);
+    break;
+  case 'D': // Left
+    moveServo(horizontalServo, horizontalAngle, STEP_SIZE);
+    break;
+  default:
+    break;
+  }
 }
