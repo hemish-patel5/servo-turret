@@ -8,8 +8,8 @@ constexpr int HORIZONTAL_SERVO_PIN = 18;
 constexpr int VERTICAL_SERVO_PIN = 19;
 constexpr int STEP_SIZE = 10;
 
-int horizontalAngle = 90;
-int verticalAngle = 90;
+int horizontalAngle = 98;
+int verticalAngle = 0;
 
 void moveServo(Servo &servo, int &angle, int change)
 {
