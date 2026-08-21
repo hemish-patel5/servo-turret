@@ -6,67 +6,60 @@ Servo verticalServo;
 
 constexpr int HORIZONTAL_SERVO_PIN = 18;
 constexpr int VERTICAL_SERVO_PIN = 19;
-constexpr int STEP_SIZE = 10;
+constexpr int HORIZONTAL_MIN = 10;
+constexpr int HORIZONTAL_MAX = 170;
+constexpr int VERTICAL_MIN = 10;
+constexpr int VERTICAL_MAX = 120;
 
-int horizontalAngle = 98;
-int verticalAngle = 0;
+int horizontalAngle = 90;
+int verticalAngle = 60;
 
-void moveServo(Servo &servo, int &angle, int change)
+void setAngles(int horizontal, int vertical)
 {
-  angle = constrain(angle + change, 0, 180);
-  servo.write(angle);
-
-  Serial.print("Horizontal: ");
-  Serial.print(horizontalAngle);
-  Serial.print(" degrees, Vertical: ");
-  Serial.print(verticalAngle);
-  Serial.println(" degrees");
+  horizontalAngle = constrain(horizontal, HORIZONTAL_MIN, HORIZONTAL_MAX);
+  verticalAngle = constrain(vertical, VERTICAL_MIN, VERTICAL_MAX);
+  horizontalServo.write(horizontalAngle);
+  verticalServo.write(verticalAngle);
+  Serial.printf("OK,%d,%d\n", horizontalAngle, verticalAngle);
 }
 
 void setup()
 {
   Serial.begin(115200);
+  Serial.setTimeout(20);
 
   horizontalServo.setPeriodHertz(50);
   verticalServo.setPeriodHertz(50);
   horizontalServo.attach(HORIZONTAL_SERVO_PIN, 500, 2400);
   verticalServo.attach(VERTICAL_SERVO_PIN, 500, 2400);
 
-  horizontalServo.write(horizontalAngle);
-  verticalServo.write(verticalAngle);
-
-  Serial.println("Arrow-key servo control ready.");
-  Serial.println("Left/Right: GPIO 18 | Up/Down: GPIO 19");
+  setAngles(horizontalAngle, verticalAngle);
+  Serial.println("READY - send horizontal,vertical followed by newline");
 }
 
 void loop()
 {
-  if (Serial.available() < 3)
+  if (!Serial.available())
+    return;
+
+  // Python sends one command such as: 90,60\n
+  String command = Serial.readStringUntil('\n');
+  command.trim();
+  int comma = command.indexOf(',');
+  if (comma <= 0)
   {
+    Serial.println("ERR - expected horizontal,vertical");
     return;
   }
 
-  // Arrow keys are sent by most terminals as: ESC [ A/B/C/D.
-  if (Serial.read() != 27 || Serial.read() != '[')
-  {
-    return;
-  }
+  String horizontalText = command.substring(0, comma);
+  String verticalText = command.substring(comma + 1);
+  for (unsigned int i = 0; i < horizontalText.length(); ++i)
+    if (!isDigit(horizontalText[i]))
+      return;
+  for (unsigned int i = 0; i < verticalText.length(); ++i)
+    if (!isDigit(verticalText[i]))
+      return;
 
-  switch (Serial.read())
-  {
-  case 'A': // Up
-    moveServo(verticalServo, verticalAngle, STEP_SIZE);
-    break;
-  case 'B': // Down
-    moveServo(verticalServo, verticalAngle, -STEP_SIZE);
-    break;
-  case 'C': // Right
-    moveServo(horizontalServo, horizontalAngle, -STEP_SIZE);
-    break;
-  case 'D': // Left
-    moveServo(horizontalServo, horizontalAngle, STEP_SIZE);
-    break;
-  default:
-    break;
-  }
+  setAngles(horizontalText.toInt(), verticalText.toInt());
 }

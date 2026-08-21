@@ -1,0 +1,5 @@
+mediapipe>=0.10,<0.11
+opencv-python>=4.8,<5
+pyserial>=3.5,<4
+numpy>=1.24
+
