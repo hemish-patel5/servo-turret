@@ -1,4 +1,4 @@
-"""Control the ESP32 turret with the position of your index fingertip."""
+# Check USB PORT Connected: ls -l /dev/ttyUSB* 2>/dev/null
 
 import argparse
 import time
@@ -13,7 +13,7 @@ import serial
 MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/hand_landmarker/"
              "hand_landmarker/float16/1/hand_landmarker.task")
 MODEL_PATH = Path(__file__).with_name("hand_landmarker.task")
-SERIAL_PORT = "COM7"
+SERIAL_PORT = "/dev/ttyUSB0"
 HORIZONTAL_RANGE = (5, 175)
 VERTICAL_RANGE = (5, 130)
 SMOOTHING = 0.50
