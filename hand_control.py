@@ -43,7 +43,7 @@ def main() -> None:
     time.sleep(2.0)
     board.reset_input_buffer()
 
-    camera = cv2.VideoCapture(args.camera, cv2.CAP_DSHOW)
+    camera = cv2.VideoCapture(args.camera)
     if not camera.isOpened():
         board.close()
         raise RuntimeError(f"Could not open camera {args.camera}")
